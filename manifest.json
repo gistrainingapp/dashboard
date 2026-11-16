@@ -1,0 +1,16 @@
+{
+  "name": "GIS Training · Financial Dashboard",
+  "short_name": "GIS Keuangan",
+  "description": "Dashboard laporan keuangan GIS Training 2026.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f3d2e",
+  "theme_color": "#0f3d2e",
+  "lang": "id",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

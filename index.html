@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GIS Training · Financial Dashboard</title>
+  <meta name="description" content="Dashboard laporan keuangan GIS Training 2026: laba rugi, neraca, dan summary bulanan." />
+
+  <!-- PWA: bisa ditambahkan ke layar utama iPhone/Android tanpa App Store -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f3d2e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="GIS Keuangan" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+
+  <script>
+    // Tema default: hijau (data-theme="dark"). Pilihan kedua: terang ("light").
+    try {
+      const t = localStorage.getItem("gis-theme");
+      document.documentElement.setAttribute("data-theme", t === "light" ? "light" : "dark");
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <div class="app">
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar" aria-label="Navigasi utama">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2c4.4 2.6 7 6.4 7 10.6C19 17.2 15.9 21 12 21s-7-3.8-7-8.4C5 8.4 7.6 4.6 12 2Zm0 4.2C9.4 8.1 8 10.3 8 12.6c0 2.6 1.6 4.7 3.5 5.2V11h1v6.8c1.9-.5 3.5-2.6 3.5-5.2 0-2.3-1.4-4.5-4-6.4Z"/></svg>
+        </span>
+        <div>
+          <div class="brand-name">GIS Training</div>
+          <div class="brand-sub">Financial Dashboard</div>
+        </div>
+      </div>
+
+      <nav class="nav" role="tablist">
+        <a href="#dashboard" class="nav-item" data-page="dashboard" role="tab">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#laba-rugi" class="nav-item" data-page="laba-rugi" role="tab">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16v2H4v-2Zm1-3 4-5 3 3 5-7 2 1.4-6.7 9.3-3-3-2.7 3.4L5 16Z"/></svg>
+          <span>Laba Rugi</span>
+        </a>
+        <a href="#neraca" class="nav-item" data-page="neraca" role="tab">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v2.1l6 1.6V9h-1.3l2.3 6.2c-.6 1.2-1.9 2-3.5 2s-2.9-.8-3.5-2L15.3 9H13v10h4v2H7v-2h4V9H8.7L11 15.2c-.6 1.2-1.9 2-3.5 2s-2.9-.8-3.5-2L6.3 9H5V6.7l6-1.6V3Zm-3.5 8.5L6.4 14.5h2.2L7.5 11.5Zm9 0-1.1 3h2.2l-1.1-3Z"/></svg>
+          <span>Neraca</span>
+        </a>
+        <a href="#summary" class="nav-item" data-page="summary" role="tab">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7Zm12 8v9H5v-9h14ZM7 12v2h3v-2H7Zm0 4v2h3v-2H7Zm5-4v2h5v-2h-5Z"/></svg>
+          <span>Summary Bulanan</span>
+        </a>
+        <a href="#database" class="nav-item" data-page="database" role="tab" id="navDb" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c4.4 0 8 1.6 8 3.5v13c0 1.9-3.6 3.5-8 3.5s-8-1.6-8-3.5v-13C4 3.6 7.6 2 12 2Zm6 12.6c-1.4.9-3.6 1.4-6 1.4s-4.6-.5-6-1.4v3.9c.3.5 2.4 1.5 6 1.5s5.7-1 6-1.5v-3.9Zm0-6c-1.4.9-3.6 1.4-6 1.4S7.4 9.5 6 8.6v3.9c.3.5 2.4 1.5 6 1.5s5.7-1 6-1.5V8.6ZM12 4C8.4 4 6.3 5 6 5.5 6.3 6 8.4 7 12 7s5.7-1 6-1.5C17.7 5 15.6 4 12 4Z"/></svg>
+          <span>Database Peserta</span>
+        </a>
+        <a href="#input" class="nav-item nav-restricted" data-page="input" role="tab" id="navInput" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm-7 11a7 7 0 0 1 11.3-5.5l-1.4 1.5A5 5 0 0 0 4.1 18H2v2Zm16-6h2v3h3v2h-3v3h-2v-3h-3v-2h3v-3Z"/></svg>
+          <span>Input Peserta</span>
+          <span class="nav-badge">STAFF</span>
+        </a>
+        <a href="#gaji" class="nav-item nav-restricted" data-page="gaji" role="tab" id="navGaji" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm-7 16c0-3.3 3.1-6 7-6 1 0 2 .2 2.9.5l-.8 1.9A6.7 6.7 0 0 0 12 16c-2.8 0-5 1.8-5 4H5Zm12.5-5h2v1.1c1.1.3 2 1.2 2 2.4h-2c0-.3-.4-.5-1-.5s-1 .2-1 .5c0 .2.2.4 1.2.6 1.6.3 2.8.9 2.8 2.4 0 1.2-.9 2.1-2 2.4V23h-2v-1.1c-1.1-.3-2-1.2-2-2.4h2c0 .3.4.5 1 .5s1-.2 1-.5c0-.2-.2-.4-1.2-.6-1.6-.3-2.8-.9-2.8-2.4 0-1.2.9-2.1 2-2.4V15Z"/></svg>
+          <span>Gaji Pegawai</span>
+          <span class="nav-badge">BOD</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="source">
+          <span class="dot" aria-hidden="true"></span>
+          <div>
+            <div class="source-title" id="sourceTitle">Google Sheet</div>
+            <div class="source-sub" id="updatedAt">—</div>
+          </div>
+        </div>
+        <a class="source-link" id="sourceLink" target="_blank" rel="noopener">Buka sumber data ↗</a>
+      </div>
+    </aside>
+
+    <!-- ============ MAIN ============ -->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="pageEyebrow">Ringkasan 2026</p>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="topbar-actions">
+          <span class="sync-pill" id="syncPill" data-state="loading"><i aria-hidden="true"></i><span>Memuat…</span></span>
+          <button class="icon-btn" id="refreshBtn" type="button" aria-label="Muat ulang data dari Google Sheet" title="Muat ulang data">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a8 8 0 0 1 7.4 5H17v2h6V5h-2v2.3A10 10 0 1 0 22 12h-2a8 8 0 1 1-8-8Z"/></svg>
+          </button>
+          <div class="select-wrap" id="periodWrap" hidden>
+            <label for="periodSelect" class="sr-only">Pilih periode</label>
+            <select id="periodSelect"></select>
+          </div>
+          <button class="user-btn" id="userBtn" type="button" hidden title="Keluar">
+            <span class="user-avatar" id="userAvatar" aria-hidden="true"></span>
+            <span class="user-name" id="userName"></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-9v-2h9V5h-9V3Zm-1.6 4.6L9.8 9l-2 2H16v2H7.8l2 2-1.4 1.4L4 12l4.4-4.4Z"/></svg>
+            <span class="sr-only">Keluar</span>
+          </button>
+          <button class="icon-btn" id="themeToggle" type="button" aria-label="Ganti tema terang/gelap">
+            <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0-5 1 3h-2l1-3Zm0 20-1-3h2l-1 3ZM2 12l3-1v2l-3-1Zm20 0-3 1v-2l3 1ZM4.9 4.9l2.8 1.4-1.4 1.4-1.4-2.8Zm14.2 14.2-2.8-1.4 1.4-1.4 1.4 2.8Zm0-14.2-1.4 2.8-1.4-1.4 2.8-1.4ZM4.9 19.1l1.4-2.8 1.4 1.4-2.8 1.4Z"/></svg>
+            <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5C11 3.5 4 8.6 4 15.2c0 1.6.4 3.1 1.2 4.4L3.6 21l1.4 1.4 1.6-1.6c1.3.8 2.8 1.2 4.4 1.2 6.6 0 11.7-7 11.7-16.5V3.5h-2.2ZM10.9 20c-1 0-2-.2-2.9-.7l6.3-6.3-1.4-1.4-6.3 6.3c-.5-.9-.7-1.9-.7-2.9 0-5 5.4-9.1 12.4-9.6C17.9 13.4 14.4 20 10.9 20Z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="loading" id="loading" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Mengambil data dari Google Sheet…</span>
+      </div>
+
+      <!-- ====== PAGE: DASHBOARD ====== -->
+      <section class="page" id="page-dashboard" data-page="dashboard" hidden>
+        <div class="grid kpis" id="dashKpis"></div>
+
+        <div class="grid g-3-1">
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Omzet &amp; Laba Bersih</h2>
+                <p class="card-sub" id="trendSub">—</p>
+              </div>
+              <div class="legend" id="lgTrend"></div>
+            </div>
+            <div class="chart h-320"><canvas id="chTrend" aria-label="Grafik omzet dan laba bersih per bulan" role="img"></canvas></div>
+          </article>
+
+          <article class="card kpi-q4" id="q4Card">
+            <div class="card-head">
+              <div>
+                <h2>KPI Peserta Q4</h2>
+                <p class="card-sub">Okt – Des 2026</p>
+              </div>
+            </div>
+            <div id="q4Body"></div>
+          </article>
+        </div>
+
+        <div class="grid g-2">
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Peserta per Program</h2>
+                <p class="card-sub" id="progSub">—</p>
+              </div>
+            </div>
+            <div class="chart h-260"><canvas id="chProgramYtd" role="img" aria-label="Jumlah peserta per program"></canvas></div>
+          </article>
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Kanal Akuisisi Peserta</h2>
+                <p class="card-sub" id="chanTotSub">—</p>
+              </div>
+              <span class="pill" id="chanLastPill" hidden></span>
+            </div>
+            <div class="bars" id="chanTotals"></div>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <h2>Kanal Akuisisi per Bulan</h2>
+              <p class="card-sub" id="chanSub">—</p>
+            </div>
+            <div class="head-tools">
+              <div class="legend" id="lgChannel"></div>
+              <div class="seg" role="group" aria-label="Satuan grafik kanal">
+                <button type="button" class="seg-btn active" data-chmode="count">Jumlah</button>
+                <button type="button" class="seg-btn" data-chmode="share">Persen</button>
+              </div>
+            </div>
+          </div>
+          <div class="chart h-280"><canvas id="chChannel" role="img" aria-label="Kanal akuisisi peserta per bulan"></canvas></div>
+        </article>
+
+        <div class="grid g-2">
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Sorotan</h2>
+                <p class="card-sub">Dihitung otomatis dari data</p>
+              </div>
+            </div>
+            <ul class="insights" id="insights"></ul>
+          </article>
+          <article class="card card-note">
+            <div class="card-head">
+              <div>
+                <h2>Catatan Konsistensi Data</h2>
+                <p class="card-sub">Ditemukan saat membaca Google Sheet</p>
+              </div>
+            </div>
+            <ul class="notes" id="dataNotes"></ul>
+          </article>
+        </div>
+      </section>
+
+      <!-- ====== PAGE: LABA RUGI ====== -->
+      <section class="page" id="page-laba-rugi" data-page="laba-rugi" hidden>
+        <div class="grid kpis" id="plKpis"></div>
+
+        <div class="grid g-1-1">
+          <article class="card statement">
+            <div class="card-head">
+              <div>
+                <h2>Laporan Laba Rugi</h2>
+                <p class="card-sub" id="plPeriodLabel">—</p>
+              </div>
+              <span class="badge" id="plBadge" hidden>Berjalan</span>
+            </div>
+            <table class="fin-table" id="plStatement"></table>
+          </article>
+
+          <div class="stack">
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <h2>Struktur Biaya</h2>
+                  <p class="card-sub" id="costLabel">Porsi terhadap omzet</p>
+                </div>
+              </div>
+              <div class="chart h-240"><canvas id="chCostMix" role="img" aria-label="Komposisi biaya terhadap omzet"></canvas></div>
+            </article>
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <h2>Margin Laba Bersih</h2>
+                  <p class="card-sub">Laba bersih ÷ omzet, per bulan</p>
+                </div>
+              </div>
+              <div class="chart h-200"><canvas id="chMargin" role="img" aria-label="Margin laba bersih per bulan"></canvas></div>
+            </article>
+          </div>
+        </div>
+
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <h2>Pendapatan, Laba Kotor &amp; Laba Bersih</h2>
+              <p class="card-sub">Perbandingan per bulan</p>
+            </div>
+            <div class="legend" id="lgPl"></div>
+          </div>
+          <div class="chart h-300"><canvas id="chPl" role="img" aria-label="Pendapatan, laba kotor dan laba bersih per bulan"></canvas></div>
+        </article>
+
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <h2>Laba Rugi per Bulan</h2>
+              <p class="card-sub">Tabel lengkap · geser ke samping di layar kecil</p>
+            </div>
+          </div>
+          <div class="table-scroll"><table class="data-table" id="plMatrix"></table></div>
+        </article>
+      </section>
+
+      <!-- ====== PAGE: NERACA ====== -->
+      <section class="page" id="page-neraca" data-page="neraca" hidden>
+        <div class="banner">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm-1 7v8h2V9h-2Zm0-4v2h2V5h-2Z"/></svg>
+          <p><strong>Neraca estimasi.</strong> Sheet belum memiliki pencatatan aset tetap, utang, dan modal disetor. Neraca ini disusun dari saldo kas akhir bulan, piutang, dan akumulasi laba bersih; selisihnya ditampilkan apa adanya sebagai dana keluar yang belum tercatat.</p>
+        </div>
+
+        <div class="grid kpis" id="bsKpis"></div>
+
+        <div class="grid g-1-1">
+          <article class="card statement">
+            <div class="card-head">
+              <div>
+                <h2>Aset</h2>
+                <p class="card-sub" id="bsAsOf1">—</p>
+              </div>
+            </div>
+            <table class="fin-table" id="bsAssets"></table>
+          </article>
+          <article class="card statement">
+            <div class="card-head">
+              <div>
+                <h2>Kewajiban &amp; Ekuitas</h2>
+                <p class="card-sub" id="bsAsOf2">—</p>
+              </div>
+            </div>
+            <table class="fin-table" id="bsLiab"></table>
+          </article>
+        </div>
+
+        <div class="grid g-2">
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Piutang Akhir Bulan</h2>
+                <p class="card-sub">Tagihan peserta yang belum lunas</p>
+              </div>
+            </div>
+            <div class="chart h-260"><canvas id="chReceivable" role="img" aria-label="Piutang akhir bulan"></canvas></div>
+          </article>
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Akumulasi Laba Bersih</h2>
+                <p class="card-sub" id="retSub">—</p>
+              </div>
+            </div>
+            <div class="chart h-260"><canvas id="chRetained" role="img" aria-label="Akumulasi laba bersih"></canvas></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ====== PAGE: SUMMARY ====== -->
+      <section class="page" id="page-summary" data-page="summary" hidden>
+        <div class="chips" id="monthChips" role="tablist" aria-label="Pilih bulan"></div>
+
+        <div class="grid kpis" id="sumKpis"></div>
+
+        <div class="grid g-2">
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Omzet per Program</h2>
+                <p class="card-sub" id="sumRevLabel">—</p>
+              </div>
+            </div>
+            <div class="chart h-260"><canvas id="chSumRevenue" role="img" aria-label="Omzet per program"></canvas></div>
+          </article>
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Peserta per Program</h2>
+                <p class="card-sub" id="sumPartLabel">—</p>
+              </div>
+            </div>
+            <div class="chart h-260"><canvas id="chSumParticipants" role="img" aria-label="Peserta per program"></canvas></div>
+          </article>
+        </div>
+
+        <div class="grid g-1-2">
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Kanal Akuisisi</h2>
+                <p class="card-sub" id="sumChLabel">—</p>
+              </div>
+            </div>
+            <div id="sumChannels" class="bars"></div>
+          </article>
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Peserta per Bulan</h2>
+                <p class="card-sub">Ditumpuk per program</p>
+              </div>
+              <div class="legend" id="lgPartMonthly"></div>
+            </div>
+            <div class="chart h-260"><canvas id="chPartMonthly" role="img" aria-label="Jumlah peserta per bulan per program"></canvas></div>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <h2>Rekap Semua Bulan</h2>
+              <p class="card-sub">Klik baris untuk melihat detail bulan tersebut</p>
+            </div>
+          </div>
+          <div class="table-scroll"><table class="data-table clickable" id="sumTable"></table></div>
+        </article>
+      </section>
+
+      <!-- ====== PAGE: DATABASE PESERTA (STAFF & BOD) ====== -->
+      <section class="page" id="page-database" data-page="database" hidden>
+        <div class="db-tools card">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3Zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z"/></svg>
+            <label for="dbSearch" class="sr-only">Cari nama peserta</label>
+            <input class="input" id="dbSearch" type="search" placeholder="Cari nama peserta…" autocomplete="off" />
+          </div>
+          <div class="select-wrap"><label for="dbProgram" class="sr-only">Filter kelas</label><select id="dbProgram"></select></div>
+          <div class="select-wrap"><label for="dbMonth" class="sr-only">Filter bulan</label><select id="dbMonth"></select></div>
+          <div class="select-wrap"><label for="dbSource" class="sr-only">Filter source</label><select id="dbSource"></select></div>
+          <div class="select-wrap"><label for="dbSort" class="sr-only">Urutkan</label><select id="dbSort">
+            <option value="month-desc">Urut: Bulan terbaru</option>
+            <option value="month-asc">Urut: Bulan terlama</option>
+            <option value="cls-asc">Urut: Kelas A–Z</option>
+            <option value="name-asc">Urut: Nama A–Z</option>
+            <option value="source-asc">Urut: Source</option>
+            <option value="fee-desc">Urut: Biaya tertinggi</option>
+          </select></div>
+        </div>
+
+        <div id="dbState" class="pay-state" hidden></div>
+
+        <div id="dbBody">
+          <div class="db-chips" id="dbChips"></div>
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Database Peserta</h2>
+                <p class="card-sub" id="dbSub">—</p>
+              </div>
+            </div>
+            <div class="table-scroll"><table class="data-table db-table" id="dbTable"></table></div>
+            <div class="db-more"><button class="seg-btn" id="dbMore" type="button" hidden>Tampilkan lebih banyak</button></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ====== PAGE: INPUT PESERTA (khusus STAFF) ====== -->
+      <section class="page" id="page-input" data-page="input" hidden>
+        <div id="inState" class="pay-state" hidden></div>
+        <form id="inForm" class="grid in-grid" novalidate autocomplete="off">
+          <div class="stack">
+            <article class="card">
+              <div class="card-head"><div><h2>1. Kelas</h2><p class="card-sub">Peserta akan ditulis ke sheet bulan &amp; kelas ini</p></div></div>
+              <div class="form-grid">
+                <div class="fld"><label class="field" for="inMonth">Bulan (sheet)</label><div class="select-wrap"><select id="inMonth" required></select></div></div>
+                <div class="fld"><label class="field" for="inBlock">Kelas</label><div class="select-wrap"><select id="inBlock" required></select></div><small class="hint-line" id="inBlockHint"></small></div>
+              </div>
+            </article>
+            <article class="card">
+              <div class="card-head"><div><h2>2. Data Peserta</h2></div></div>
+              <div class="form-grid">
+                <div class="fld span-2"><label class="field" for="inName">Nama Lengkap Peserta</label><input class="input" id="inName" required maxlength="120" /></div>
+                <div class="fld"><label class="field" for="inSource">Kategori Peserta (source)</label><div class="select-wrap"><select id="inSource">
+                  <option value="Online">Online</option><option value="Referral">Referral</option><option value="B2B">B2B</option><option value="Ads">Ads</option>
+                </select></div></div>
+                <div class="fld"><label class="field" for="inJenis">Keterangan Pembayaran</label><input class="input" id="inJenis" list="jenisList" value="Personal" /><datalist id="jenisList"><option value="Personal"></option><option value="Perusahaan"></option><option value="TUK Ditalo"></option></datalist></div>
+              </div>
+            </article>
+            <article class="card">
+              <div class="card-head"><div><h2>3. Tanggal &amp; Pembayaran</h2></div></div>
+              <div class="form-grid">
+                <div class="fld"><label class="field" for="inTglDp">Tgl DP</label><input class="input" id="inTglDp" type="date" /></div>
+                <div class="fld"><label class="field" for="inDp">Jumlah DP</label><input class="input money" id="inDp" inputmode="numeric" placeholder="Rp0" /></div>
+                <div class="fld"><label class="field" for="inTglLunas">Tgl Pelunasan</label><input class="input" id="inTglLunas" type="date" /></div>
+                <div class="fld"><label class="field" for="inLunas">Jumlah Pelunasan</label><input class="input money" id="inLunas" inputmode="numeric" placeholder="Rp0" /></div>
+                <div class="fld span-2"><label class="field" for="inStatus">Pembayaran</label><div class="select-wrap"><select id="inStatus">
+                  <option value="Lunas">Lunas</option><option value="DP">DP</option><option value="Belum Bayar">Belum Bayar</option>
+                </select></div><small class="hint-line" id="inStatusHint">Otomatis dari jumlah dibayar — bisa diubah.</small></div>
+              </div>
+            </article>
+            <article class="card">
+              <div class="card-head"><div><h2>4. Rincian Pembiayaan</h2><p class="card-sub">Terisi otomatis dari peserta terakhir di kelas ini — sesuaikan bila beda</p></div></div>
+              <div class="form-grid">
+                <div class="fld"><label class="field" for="inFee">Biaya Pelatihan</label><input class="input money" id="inFee" inputmode="numeric" required placeholder="Rp0" /></div>
+                <div class="fld"><label class="field" for="inLsp">Biaya LSP</label><input class="input money" id="inLsp" inputmode="numeric" placeholder="Rp0" /></div>
+                <div class="fld"><label class="field" for="inShip">Ongkos Kirim</label><input class="input money" id="inShip" inputmode="numeric" placeholder="Rp0" /></div>
+                <div class="fld"><label class="field" for="inMerch">Merchandise</label><input class="input money" id="inMerch" inputmode="numeric" placeholder="Rp0" /></div>
+              </div>
+            </article>
+          </div>
+
+          <aside class="card in-summary">
+            <div class="card-head"><div><h2>Ringkasan</h2><p class="card-sub" id="sumWho">—</p></div></div>
+            <dl class="sum-list">
+              <div><dt>Biaya pelatihan</dt><dd id="sFee">Rp0</dd></div>
+              <div><dt>Total dibayar</dt><dd id="sPaid">Rp0</dd></div>
+              <div><dt>Sisa tagihan</dt><dd id="sDue">Rp0</dd></div>
+              <div class="sep"></div>
+              <div><dt>Biaya LSP</dt><dd id="sLsp">Rp0</dd></div>
+              <div><dt>Ongkos kirim</dt><dd id="sShip">Rp0</dd></div>
+              <div><dt>Merchandise</dt><dd id="sMerch">Rp0</dd></div>
+              <div class="total"><dt>Laba kotor</dt><dd id="sGross">Rp0</dd></div>
+              <div><dt>Margin</dt><dd id="sMargin">—</dd></div>
+            </dl>
+            <p class="auth-error" id="inError" role="alert" hidden></p>
+            <button class="auth-submit" id="inSubmit" type="submit"><span class="spinner sm" aria-hidden="true"></span><span class="label">Simpan ke Google Sheet</span></button>
+            <p class="hint-line">Laba kotor tidak diinput — dihitung otomatis oleh rumus di sheet.</p>
+          </aside>
+        </form>
+      </section>
+
+      <!-- ====== PAGE: GAJI PEGAWAI (khusus BOD) ====== -->
+      <section class="page" id="page-gaji" data-page="gaji" hidden>
+        <div class="banner banner-lock">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a5 5 0 0 1 5 5v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h1V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v3h6V7a3 3 0 0 0-3-3Z"/></svg>
+          <p><strong>Rahasia — khusus BOD.</strong> Data gaji hanya dikirim server untuk akun BOD dan tidak tersimpan di browser.</p>
+        </div>
+
+        <div id="payState" class="pay-state" hidden></div>
+
+        <div id="payBody">
+          <div class="grid kpis" id="payKpis"></div>
+
+          <div class="grid g-2">
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <h2>Total Gaji per Bulan</h2>
+                  <p class="card-sub" id="payTrendSub">—</p>
+                </div>
+              </div>
+              <div class="chart h-260"><canvas id="chPayTrend" role="img" aria-label="Total gaji per bulan"></canvas></div>
+            </article>
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <h2>Komposisi Gaji</h2>
+                  <p class="card-sub" id="payMixSub">—</p>
+                </div>
+              </div>
+              <div class="bars" id="payMix"></div>
+            </article>
+          </div>
+
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>Daftar Gaji Pegawai</h2>
+                <p class="card-sub" id="payTableSub">—</p>
+              </div>
+            </div>
+            <div class="table-scroll"><table class="data-table" id="payTable"></table></div>
+          </article>
+        </div>
+      </section>
+
+      <footer class="foot">
+        Data: Google Sheet “Laporan Keuangan GIS Training” · Angka dalam Rupiah
+      </footer>
+    </main>
+  </div>
+
+  <!-- ============ LOGIN ============ -->
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- ====== EDIT PESERTA (khusus STAFF) ====== -->
+  <div class="modal" id="edModal" hidden>
+    <form class="modal-card" id="edForm" role="dialog" aria-modal="true" aria-labelledby="edTitle" novalidate autocomplete="off">
+      <div class="modal-head">
+        <div>
+          <h2 id="edTitle">Edit Peserta</h2>
+          <p class="card-sub" id="edWhere">—</p>
+        </div>
+        <button class="icon-btn" type="button" id="edClose" aria-label="Tutup">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 10.6 5-5 1.4 1.4-5 5 5 5-1.4 1.4-5-5-5 5L5.6 17l5-5-5-5L7 5.6l5 5Z"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <h3 class="modal-sec">Data Peserta</h3>
+        <div class="form-grid">
+          <div class="fld span-2"><label class="field" for="edName">Nama Lengkap Peserta</label><input class="input" id="edName" required maxlength="120" /></div>
+          <div class="fld"><label class="field" for="edSource">Kategori Peserta (source)</label><div class="select-wrap"><select id="edSource">
+            <option value="Online">Online</option><option value="Referral">Referral</option><option value="B2B">B2B</option><option value="Ads">Ads</option>
+          </select></div></div>
+          <div class="fld"><label class="field" for="edJenis">Keterangan Pembayaran</label><input class="input" id="edJenis" list="jenisList" /></div>
+        </div>
+
+        <div class="modal-sec-row">
+          <h3 class="modal-sec">Tanggal &amp; Pembayaran</h3>
+          <button class="seg-btn quick-btn" type="button" id="edPayOff">Tandai lunas hari ini</button>
+        </div>
+        <div class="form-grid">
+          <div class="fld"><label class="field" for="edTglDp">Tgl DP</label><input class="input" id="edTglDp" type="date" /></div>
+          <div class="fld"><label class="field" for="edDp">Jumlah DP</label><input class="input money" id="edDp" inputmode="numeric" placeholder="Rp0" /></div>
+          <div class="fld"><label class="field" for="edTglLunas">Tgl Pelunasan</label><input class="input" id="edTglLunas" type="date" /></div>
+          <div class="fld"><label class="field" for="edLunas">Jumlah Pelunasan</label><input class="input money" id="edLunas" inputmode="numeric" placeholder="Rp0" /></div>
+          <div class="fld span-2"><label class="field" for="edStatus">Pembayaran</label><div class="select-wrap"><select id="edStatus">
+            <option value="Lunas">Lunas</option><option value="DP">DP</option><option value="Belum Bayar">Belum Bayar</option>
+          </select></div><small class="hint-line">Ikut berubah otomatis saat jumlah dibayar diubah — bisa dipilih manual.</small></div>
+        </div>
+
+        <h3 class="modal-sec">Rincian Pembiayaan</h3>
+        <div class="form-grid">
+          <div class="fld"><label class="field" for="edFee">Biaya Pelatihan</label><input class="input money" id="edFee" inputmode="numeric" required placeholder="Rp0" /></div>
+          <div class="fld"><label class="field" for="edLsp">Biaya LSP</label><input class="input money" id="edLsp" inputmode="numeric" placeholder="Rp0" /></div>
+          <div class="fld"><label class="field" for="edShip">Ongkos Kirim</label><input class="input money" id="edShip" inputmode="numeric" placeholder="Rp0" /></div>
+          <div class="fld"><label class="field" for="edMerch">Merchandise</label><input class="input money" id="edMerch" inputmode="numeric" placeholder="Rp0" /></div>
+        </div>
+
+        <dl class="ed-sum">
+          <div><dt>Total dibayar</dt><dd id="eSPaid">Rp0</dd></div>
+          <div><dt>Sisa tagihan</dt><dd id="eSDue">Rp0</dd></div>
+          <div><dt>Laba kotor</dt><dd id="eSGross">Rp0</dd></div>
+        </dl>
+        <p class="auth-error" id="edError" role="alert" hidden></p>
+      </div>
+      <div class="modal-foot">
+        <button class="seg-btn ghost-btn" type="button" id="edCancel">Batal</button>
+        <button class="auth-submit" id="edSubmit" type="submit"><span class="spinner sm" aria-hidden="true"></span><span class="label">Simpan perubahan</span></button>
+      </div>
+    </form>
+  </div>
+
+  <div class="auth" id="auth" hidden>
+    <form class="auth-card" id="authForm" role="dialog" aria-modal="true" aria-labelledby="authTitle" novalidate>
+      <div class="auth-brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2c4.4 2.6 7 6.4 7 10.6C19 17.2 15.9 21 12 21s-7-3.8-7-8.4C5 8.4 7.6 4.6 12 2Zm0 4.2C9.4 8.1 8 10.3 8 12.6c0 2.6 1.6 4.7 3.5 5.2V11h1v6.8c1.9-.5 3.5-2.6 3.5-5.2 0-2.3-1.4-4.5-4-6.4Z"/></svg>
+        </span>
+        <div>
+          <div class="auth-org">GIS Training</div>
+          <div class="auth-org-sub">Financial Dashboard</div>
+        </div>
+      </div>
+      <h2 id="authTitle">Masuk</h2>
+      <p class="auth-hint" id="authHint">Pilih akun, lalu masukkan password untuk melihat dashboard.</p>
+
+      <fieldset class="who">
+        <legend class="field">Siapa kamu?</legend>
+        <div class="who-grid">
+          <label class="who-opt">
+            <input type="radio" name="who" value="BOD" />
+            <span class="who-card">
+              <span class="who-num" aria-hidden="true">1</span>
+              <span class="who-text"><b>BOD</b><small>Board of Directors</small></span>
+            </span>
+          </label>
+          <label class="who-opt">
+            <input type="radio" name="who" value="STAFF" />
+            <span class="who-card">
+              <span class="who-num" aria-hidden="true">2</span>
+              <span class="who-text"><b>STAFF</b><small>Staff</small></span>
+            </span>
+          </label>
+        </div>
+      </fieldset>
+
+      <label class="field" for="authPass">Password</label>
+      <div class="pw-wrap">
+        <input class="input" id="authPass" name="gis-dashboard-pin" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore required />
+        <button class="pw-toggle" id="pwToggle" type="button" aria-label="Tampilkan password" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c5 0 9 4.5 10 7-1 2.5-5 7-10 7S3 14.5 2 12c1-2.5 5-7 10-7Zm0 2c-3.4 0-6.3 2.8-7.8 5 1.5 2.2 4.4 5 7.8 5s6.3-2.8 7.8-5C18.3 9.8 15.4 7 12 7Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"/></svg>
+        </button>
+      </div>
+
+      <p class="caps-hint" id="capsHint" hidden>Caps Lock sedang aktif</p>
+      <p class="auth-error" id="authError" role="alert" hidden></p>
+      <button class="auth-submit" id="authSubmit" type="submit">
+        <span class="spinner sm" aria-hidden="true"></span>
+        <span class="label">Masuk</span>
+      </button>
+    </form>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
