@@ -1094,7 +1094,7 @@
         <td class="left">${esc(p.jenis || "\u2014")}</td>
         <td class="left">${p.status ? `<span class="status-tag ${/lunas/i.test(p.status) ? "ok" : "wait"}">${esc(p.status)}</span>` : "\u2014"}</td>
         <td>${p.fee ? rp(p.fee) : "\u2014"}</td>
-        ${editable ? `<td><button class="row-edit" type="button" data-id="${p.id}" aria-label="Edit ${esc(p.name)}">Edit</button></td>` : ""}
+        ${editable ? `<td class="row-acts"><button class="row-edit" type="button" data-id="${p.id}" aria-label="Edit ${esc(p.name)}">Edit</button><button class="row-del" type="button" data-id="${p.id}" aria-label="Hapus ${esc(p.name)}">Hapus</button></td>` : ""}
       </tr>`).join("") || `<tr><td colspan="${editable ? 9 : 8}" class="left muted">Tidak ada peserta yang cocok.</td></tr>`}</tbody>`;
     if (db.flash) { clearTimeout(renderDb._f); renderDb._f = setTimeout(() => (db.flash = ""), 2500); }
     $("#dbMore").hidden = list.length <= db.limit;
@@ -1232,10 +1232,29 @@
     sel.value = v || sel.options[0].value;
   };
 
-  function openEdit(id) {
+  async function ensureInputOpts() {
+    if (inputOpts) return inputOpts;
+    const res = await callGas("getInputOptions", session && session.token);
+    if (res && !res.error) inputOpts = res;
+    return inputOpts;
+  }
+
+  async function openEdit(id) {
     const p = people && people.find((x) => x.id === +id);
     if (!p || !canInput()) return;
     editing = p;
+    // pilihan kelas = blok di sheet bulan yang sama
+    const sel = $("#edClass");
+    sel.innerHTML = `<option value="${esc(p.cls)}">${esc(p.cls)}</option>`;
+    sel.value = p.cls;
+    try {
+      const opts = await ensureInputOpts();
+      const m = opts && opts.months.find((x) => x.sheet === p.sheet);
+      if (m) sel.innerHTML = m.blocks.map((b) => {
+        const cur = b.title === p.cls;
+        return `<option value="${esc(b.title)}"${cur ? " selected" : ""}${!cur && !b.free ? " disabled" : ""}>${esc(b.title)} \u00b7 ${b.free} kosong</option>`;
+      }).join("");
+    } catch (ex) { /* biarkan hanya kelas saat ini */ }
     edStatusTouched = false;
     edReturnFocus = document.activeElement;
     $("#edTitle").textContent = `Edit \u00b7 ${p.name}`;
@@ -1280,6 +1299,25 @@
     updateEditSummary(true);
   }
 
+  async function deleteParticipant(id) {
+    const p = people && people.find((x) => x.id === +id);
+    if (!p || !canInput()) return;
+    const ok = window.confirm(`Hapus ${p.name} dari ${p.cls} (sheet ${p.sheet}, baris ${p.row})?\n\nData peserta di Google Sheet akan dikosongkan. Baris tetap ada. Tindakan ini tidak bisa dibatalkan dari aplikasi.`);
+    if (!ok) return;
+    try {
+      const res = await callGas("deleteParticipant", session && session.token, { sheet: p.sheet, row: p.row, origName: p.name });
+      if (res.error === "auth") { logout("Sesi Anda sudah berakhir. Silakan masuk lagi."); return; }
+      if (res.error) throw new Error(res.error === "forbidden" ? "Akun ini tidak punya akses untuk menghapus peserta." : res.error);
+      toast(`\u2713 ${p.name} dihapus dari sheet ${res.sheet}, baris ${res.row}.`);
+      db.flash = "";
+      people = null; inputOpts = null;
+      if (current === "database") renderDb();
+      load();
+    } catch (ex) {
+      toast(ex.message);
+    }
+  }
+
   async function submitEdit(e) {
     e.preventDefault();
     if (!editing) return;
@@ -1298,11 +1336,28 @@
     if (payload.dp && payload.dp !== editing.dp && !payload.tglDp) { $("#edTglDp").focus(); return fail("Isi tanggal DP."); }
     if (payload.lunas && payload.lunas !== editing.lunas && !payload.tglLunas) { $("#edTglLunas").focus(); return fail("Isi tanggal pelunasan."); }
     btn.disabled = true; btn.classList.add("busy");
+    let moved = "";
     try {
+      const newCls = $("#edClass").value;
+      if (newCls && newCls !== editing.cls) {
+        const mv = await callGas("moveParticipant", session && session.token, { sheet: editing.sheet, row: editing.row, origName: editing.name, toCls: newCls });
+        if (mv.error === "auth") { closeEdit(); logout("Sesi Anda sudah berakhir. Silakan masuk lagi."); return; }
+        if (mv.error) throw new Error(mv.error === "forbidden" ? "Akun ini tidak punya akses untuk mengedit peserta." : mv.error);
+        payload.row = mv.row;
+        moved = mv.toCls;
+      }
       const res = await callGas("updateParticipant", session && session.token, payload);
       if (res.error === "auth") { closeEdit(); logout("Sesi Anda sudah berakhir. Silakan masuk lagi."); return; }
-      if (res.error) throw new Error(res.error === "forbidden" ? "Akun ini tidak punya akses untuk mengedit peserta." : res.error);
+      if (res.error) throw new Error(res.error === "forbidden" ? "Akun ini tidak punya akses untuk mengedit peserta." : (moved ? "Peserta sudah dipindah ke " + moved + ", tapi perubahan lain gagal: " : "") + res.error);
       closeEdit();
+      if (moved) {
+        toast(`\u2713 ${payload.name} dipindah ke ${moved} di sheet ${res.sheet}, baris ${res.row}.`);
+        db.flash = res.sheet + "|" + res.row;
+        people = null; inputOpts = null;
+        if (current === "database") renderDb();
+        load();
+        return;
+      }
       if (!res.changed.length) { toast("Tidak ada perubahan \u2014 data di sheet sudah sama."); return; }
       toast(`\u2713 ${payload.name} diperbarui (${res.changed.length} kolom) di sheet ${res.sheet}, baris ${res.row}.`);
       db.flash = res.sheet + "|" + res.row;
@@ -1683,6 +1738,8 @@
     $("#dbTable").addEventListener("click", (e) => {
       const b = e.target.closest(".row-edit");
       if (b) openEdit(b.dataset.id);
+      const d = e.target.closest(".row-del");
+      if (d) deleteParticipant(d.dataset.id);
     });
 
     // Edit peserta
