@@ -728,3 +728,9 @@ body.modal-open { overflow: hidden; }
   .brand-logo { max-width: 128px; padding: 5px; }
   .db-table { min-width: 680px; }
 }
+
+/* Cegah halaman melebar keluar layar (Safari iOS akan mengecilkan seluruh halaman bila ada yang melebar) */
+@media (max-width: 860px) {
+  html, body { max-width: 100%; overflow-x: hidden; }
+  .app { max-width: 100%; overflow-x: clip; }
+}
