@@ -722,3 +722,9 @@ body.modal-open { overflow: hidden; }
 
 /* Logo utama (sidebar) */
 .brand-logo { display: block; width: 100%; max-width: 180px; height: auto; border-radius: 10px; background: #fff; padding: 6px; }
+
+/* Mobile: logo lebih kecil, tabel database bisa digeser ke samping */
+@media (max-width: 520px) {
+  .brand-logo { max-width: 128px; padding: 5px; }
+  .db-table { min-width: 680px; }
+}
