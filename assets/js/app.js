@@ -1371,6 +1371,12 @@
     }
   }
 
+  // iOS Safari kadang belum menghitung ulang lebar halaman sampai ada sentuhan; paksa hitung ulang.
+  function reflowPage() { window.dispatchEvent(new Event("resize")); }
+  window.addEventListener("load", () => { setTimeout(reflowPage, 300); setTimeout(reflowPage, 1200); });
+  window.addEventListener("pageshow", reflowPage);
+  window.addEventListener("orientationchange", () => setTimeout(reflowPage, 300));
+
   function toggleEmpty(canvasId, isEmpty, msg) {
     const wrap = document.getElementById(canvasId).parentElement;
     let p = wrap.querySelector(".empty");
